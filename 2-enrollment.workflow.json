@@ -1,0 +1,37 @@
+{
+  "schema_version": 2,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "Jolly Central ・ 學生報名流程",
+    "quality_profile": "showcase"
+  },
+  "lanes": [
+    { "id": "staff", "label": "職員（admin／經理）" },
+    { "id": "api", "label": "Worker API" },
+    { "id": "db", "label": "D1 資料庫" }
+  ],
+  "mainPath": ["pick", "klass", "price", "dates", "api", "rows"],
+  "nodes": [
+    { "id": "pick", "lane": "staff", "col": 0, "type": "frontend", "label": "選學生＋開始日期", "sublabel": "只列當日仍開辦班別", "width": 132 },
+    { "id": "klass", "lane": "staff", "col": 1, "type": "frontend", "label": "選班別／課程", "sublabel": "恆常／短期・試讀", "width": 132 },
+    { "id": "price", "lane": "staff", "col": 2, "type": "frontend", "label": "優惠與定價", "sublabel": "85折／9折／定額", "width": 132 },
+    { "id": "dates", "lane": "staff", "col": 3, "type": "frontend", "label": "選堂日", "sublabel": "連堂或自選 ≤10 堂", "width": 132 },
+    { "id": "api", "lane": "api", "col": 4, "type": "backend", "label": "報名 API", "sublabel": "建立報名＋堂日", "width": 132 },
+    { "id": "inv", "lane": "db", "col": 4, "type": "database", "label": "首月學費單", "sublabel": "invoices／items", "width": 132 },
+    { "id": "rows", "lane": "db", "col": 5, "type": "database", "label": "enrollments", "sublabel": "＋lesson_sessions", "width": 132 }
+  ],
+  "edges": [
+    { "id": "e1", "from": "pick", "to": "klass" },
+    { "id": "e2", "from": "klass", "to": "price" },
+    { "id": "e3", "from": "price", "to": "dates" },
+    { "id": "e4", "from": "dates", "to": "api", "label": "提交報名", "variant": "emphasis" },
+    { "id": "e5", "from": "api", "to": "rows", "label": "寫入報名堂日" },
+    { "id": "e6", "from": "api", "to": "inv", "variant": "emphasis" }
+  ],
+  "semanticChecks": { "allowedRoots": ["pick"], "allowedTerminals": ["rows", "inv"] },
+  "cards": [
+    { "dot": "cyan", "title": "報名規則", "items": ["先選開始日期，只顯示該日星期仍然有效的班別（V379）", "自選堂日最多 10 堂並避開公眾假期；每週模式則設堂數", "已停用或已刪除的班別不會出現在日期篩選選單"] },
+    { "dot": "amber", "title": "計價規則", "items": ["課程優惠先行：85折／9折，或定額優惠（每批報名只用一次）", "AutoPay 是付款方式優惠，在課程優惠後再疊加 95%（如 85%×95%=80.75%）", "短期自選日期即試讀式報名；學費單以 JJ-SEL-月份-學生-報名ID 編號"] },
+    { "dot": "emerald", "title": "介面要點", "items": ["建立報名：POST /api/enrollments", "月結出單：POST /api/enrollments/:id/monthly-invoice", "重出 WhatsApp 單：POST /api/enrollments/:id/lesson-whatsapp-invoice"] }
+  ]
+}

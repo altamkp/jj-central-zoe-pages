@@ -1,0 +1,180 @@
+{
+  "schema_version": 2,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "Jolly Central ・ 家長申請流程",
+    "quality_profile": "showcase",
+    "legend": {
+      "mode": "hidden"
+    }
+  },
+  "lanes": [
+    {
+      "id": "staff",
+      "label": "職員"
+    },
+    {
+      "id": "parent",
+      "label": "家長（免登入）"
+    },
+    {
+      "id": "api",
+      "label": "Worker API"
+    },
+    {
+      "id": "db",
+      "label": "D1 資料庫"
+    }
+  ],
+  "mainPath": [
+    "link",
+    "open",
+    "view",
+    "submit",
+    "req",
+    "rev",
+    "apply"
+  ],
+  "nodes": [
+    {
+      "id": "link",
+      "lane": "staff",
+      "col": 0,
+      "type": "frontend",
+      "label": "發出 token 連結",
+      "sublabel": "WhatsApp 模板發送",
+      "width": 146
+    },
+    {
+      "id": "open",
+      "lane": "parent",
+      "col": 1,
+      "type": "external",
+      "label": "開連結＋PIN",
+      "sublabel": "電話驗證防濫用",
+      "width": 146
+    },
+    {
+      "id": "view",
+      "lane": "parent",
+      "col": 2,
+      "type": "external",
+      "label": "看未來 13 日堂",
+      "sublabel": "逐堂顯示一覽",
+      "width": 146
+    },
+    {
+      "id": "submit",
+      "lane": "parent",
+      "col": 3,
+      "type": "external",
+      "label": "遞交申請",
+      "sublabel": "請假／補堂／退學",
+      "width": 146
+    },
+    {
+      "id": "req",
+      "lane": "db",
+      "col": 4,
+      "type": "database",
+      "label": "家長申請紀錄",
+      "sublabel": "parent_service_requests",
+      "width": 146
+    },
+    {
+      "id": "rev",
+      "lane": "staff",
+      "col": 5,
+      "type": "frontend",
+      "label": "職員審批",
+      "sublabel": "已確認／不批准",
+      "width": 146
+    },
+    {
+      "id": "apply",
+      "lane": "db",
+      "col": 5,
+      "type": "database",
+      "label": "套用效果",
+      "sublabel": "點名／end_date／補堂",
+      "width": 146
+    }
+  ],
+  "edges": [
+    {
+      "id": "e1",
+      "from": "link",
+      "to": "open",
+      "label": "連結"
+    },
+    {
+      "id": "e2",
+      "from": "open",
+      "to": "view",
+      "label": "驗證後"
+    },
+    {
+      "id": "e3",
+      "from": "view",
+      "to": "submit",
+      "label": "選類型"
+    },
+    {
+      "id": "e4",
+      "from": "submit",
+      "to": "req",
+      "label": "寫入申請",
+      "variant": "emphasis"
+    },
+    {
+      "id": "e5",
+      "from": "req",
+      "to": "rev",
+      "label": "待審批"
+    },
+    {
+      "id": "e6",
+      "from": "rev",
+      "to": "apply",
+      "label": "確認後套用",
+      "variant": "emphasis"
+    }
+  ],
+  "semanticChecks": {
+    "allowedRoots": [
+      "link"
+    ],
+    "allowedTerminals": [
+      "apply"
+    ]
+  },
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "連結種類",
+      "items": [
+        "報名表格／請假／補堂／退學／勤學獎／學習遊戲，全部以免登入 token",
+        "PIN 驗證失敗多次會鎖定（parent_link_auth_failures）",
+        "職員生成：POST /api/students/:id/parent-service-link"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "確認後效果",
+      "items": [
+        "請假確認→寫入點名「請假」；退學確認→設定 enrollment end_date",
+        "補堂確認→建立補堂安排及補堂點名紀錄",
+        "可同時申請請假＋補堂；未指明目標堂則由職員安排"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "介面要點",
+      "items": [
+        "家長提交：POST /api/parent-service/:token",
+        "審批：POST /api/parent-service-requests/:id/review",
+        "報名表格另走 parent_form_submissions 確認流程"
+      ]
+    }
+  ]
+}

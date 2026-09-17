@@ -1,0 +1,154 @@
+{
+  "schema_version": 2,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "Jolly Central ・ AutoPay 自動轉帳批次",
+    "quality_profile": "showcase"
+  },
+  "lanes": [
+    {
+      "id": "acc",
+      "label": "會計與銀行輸出"
+    },
+    {
+      "id": "api",
+      "label": "Worker API"
+    },
+    {
+      "id": "db",
+      "label": "D1 資料庫"
+    }
+  ],
+  "mainPath": [
+    "prof",
+    "cand",
+    "prev",
+    "fin",
+    "rows",
+    "exp"
+  ],
+  "nodes": [
+    {
+      "id": "prof",
+      "lane": "acc",
+      "col": 0,
+      "type": "frontend",
+      "label": "設定 AutoPay 檔",
+      "sublabel": "帳號加密＋限額",
+      "width": 230
+    },
+    {
+      "id": "cand",
+      "lane": "api",
+      "col": 1,
+      "type": "backend",
+      "label": "選單候選",
+      "sublabel": "當月未繳＋自動轉帳",
+      "width": 230
+    },
+    {
+      "id": "prev",
+      "lane": "api",
+      "col": 2,
+      "type": "backend",
+      "label": "預覽拆單",
+      "sublabel": "依限額拆 _a/_b",
+      "width": 230
+    },
+    {
+      "id": "fin",
+      "lane": "api",
+      "col": 3,
+      "type": "backend",
+      "label": "確立批次",
+      "sublabel": "批次號 AP-######",
+      "width": 230
+    },
+    {
+      "id": "rows",
+      "lane": "db",
+      "col": 4,
+      "type": "database",
+      "label": "autopay_batches",
+      "sublabel": "＋收款待銀行確認",
+      "width": 230
+    },
+    {
+      "id": "exp",
+      "lane": "acc",
+      "col": 5,
+      "type": "external",
+      "label": "出銀行檔",
+      "sublabel": "恒生 TXT／XLSX",
+      "width": 230
+    }
+  ],
+  "edges": [
+    {
+      "id": "e1",
+      "from": "prof",
+      "to": "cand"
+    },
+    {
+      "id": "e2",
+      "from": "cand",
+      "to": "prev"
+    },
+    {
+      "id": "e3",
+      "from": "prev",
+      "to": "fin",
+      "label": "確認"
+    },
+    {
+      "id": "e4",
+      "from": "fin",
+      "to": "rows",
+      "label": "落批次",
+      "variant": "emphasis"
+    },
+    {
+      "id": "e5",
+      "from": "rows",
+      "to": "exp",
+      "label": "確認後出檔"
+    }
+  ],
+  "semanticChecks": {
+    "allowedRoots": [
+      "prof"
+    ],
+    "allowedTerminals": [
+      "exp"
+    ]
+  },
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "設定與限額",
+      "items": [
+        "銀行帳號加密存於 student_autopay_profiles",
+        "限額模式：per_debit（每筆）或 monthly_total（每月總額）",
+        "設定：GET／PUT /api/students/:id/autopay"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "批次流程",
+      "items": [
+        "預覽：POST /api/autopay/preview（帳號以遮罩顯示）",
+        "確立：POST /api/autopay/finalize，收款先記網上過數、待銀行確認",
+        "出檔：GET /api/autopay/batches/:id/txt（恒生 HKMRI v1.3）或 /excel"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "例外處理",
+      "items": [
+        "批次可整批作廢：POST /api/autopay/batches/:id/void，回復單據餘額",
+        "超出限額的單會拆 parts（_a/_b）或留在候選之外",
+        "舊 SchoolTracs 轉帳資料：POST /api/autopay/st-import/preview｜confirm"
+      ]
+    }
+  ]
+}

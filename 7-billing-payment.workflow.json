@@ -1,0 +1,175 @@
+{
+  "schema_version": 2,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "Jolly Central ・ 學費出單與收款",
+    "quality_profile": "showcase",
+    "legend": {
+      "mode": "hidden"
+    }
+  },
+  "lanes": [
+    {
+      "id": "acc",
+      "label": "會計與收據"
+    },
+    {
+      "id": "api",
+      "label": "Worker API"
+    },
+    {
+      "id": "db",
+      "label": "D1 資料庫"
+    }
+  ],
+  "mainPath": [
+    "cand",
+    "gen",
+    "send",
+    "pay",
+    "rec",
+    "rows"
+  ],
+  "nodes": [
+    {
+      "id": "cand",
+      "lane": "acc",
+      "col": 0,
+      "type": "frontend",
+      "label": "選學生月份",
+      "sublabel": "出月結學費單",
+      "width": 230
+    },
+    {
+      "id": "gen",
+      "lane": "api",
+      "col": 1,
+      "type": "backend",
+      "label": "月結出單 API",
+      "sublabel": "併入同月未繳單",
+      "width": 230
+    },
+    {
+      "id": "send",
+      "lane": "acc",
+      "col": 2,
+      "type": "frontend",
+      "label": "WhatsApp／PDF",
+      "sublabel": "含全部未繳月份",
+      "width": 230
+    },
+    {
+      "id": "pay",
+      "lane": "acc",
+      "col": 3,
+      "type": "frontend",
+      "label": "登記收款",
+      "sublabel": "現金／支票／過數",
+      "width": 230
+    },
+    {
+      "id": "rec",
+      "lane": "api",
+      "col": 4,
+      "type": "backend",
+      "label": "收款 API",
+      "sublabel": "自動收據編號",
+      "width": 230
+    },
+    {
+      "id": "rows",
+      "lane": "db",
+      "col": 5,
+      "type": "database",
+      "label": "invoice_payments",
+      "sublabel": "更新餘額狀態",
+      "width": 230
+    },
+    {
+      "id": "receipt",
+      "lane": "acc",
+      "col": 5,
+      "type": "external",
+      "label": "收據 PDF",
+      "sublabel": "前端組版下載",
+      "width": 230
+    }
+  ],
+  "edges": [
+    {
+      "id": "e1",
+      "from": "cand",
+      "to": "gen"
+    },
+    {
+      "id": "e2",
+      "from": "gen",
+      "to": "send",
+      "label": "單據發送"
+    },
+    {
+      "id": "e3",
+      "from": "send",
+      "to": "pay",
+      "label": "家長繳費"
+    },
+    {
+      "id": "e4",
+      "from": "pay",
+      "to": "rec",
+      "label": "確認收款"
+    },
+    {
+      "id": "e5",
+      "from": "rec",
+      "to": "rows",
+      "label": "記帳",
+      "variant": "emphasis"
+    },
+    {
+      "id": "e6",
+      "from": "rec",
+      "to": "receipt",
+      "label": "出收據",
+      "variant": "emphasis"
+    }
+  ],
+  "semanticChecks": {
+    "allowedRoots": [
+      "cand"
+    ],
+    "allowedTerminals": [
+      "rows",
+      "receipt"
+    ]
+  },
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "出單規則",
+      "items": [
+        "月結：POST /api/enrollments/:id/monthly-invoice（併入同月未繳）",
+        "合併未繳單：POST /api/billing/students/:id/merge-unpaid-invoices",
+        "折扣先計課程優惠，AutoPay 95% 之後疊加"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "收款規則",
+      "items": [
+        "收款：POST /api/invoices/:id/payments（現金／支票／網上過數／ATM）",
+        "可用回贈扣帳：student_credits → student_credit_uses",
+        "收據編號自動產生：JJ-R-YYYYMMDD-######"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "退單與重出",
+      "items": [
+        "刪除未繳單：DELETE /api/invoices/:id（軟性作廢並退回回贈）",
+        "同班同日重選即重建學費單，不再誤報撞堂（V378／V380）",
+        "作廢收據：POST /api/payments/:id/void（理由至少 3 字，重算單據）"
+      ]
+    }
+  ]
+}

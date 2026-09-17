@@ -1,0 +1,157 @@
+{
+  "schema_version": 2,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "Jolly Central ・ 空堂刪除流程",
+    "quality_profile": "showcase",
+    "legend": {
+      "mode": "hidden"
+    }
+  },
+  "lanes": [
+    {
+      "id": "staff",
+      "label": "職員"
+    },
+    {
+      "id": "api",
+      "label": "Worker API"
+    },
+    {
+      "id": "db",
+      "label": "D1 資料庫"
+    }
+  ],
+  "mainPath": [
+    "pick",
+    "api",
+    "chk",
+    "sess"
+  ],
+  "nodes": [
+    {
+      "id": "pick",
+      "lane": "staff",
+      "col": 0,
+      "type": "frontend",
+      "label": "指定日期 0 學生",
+      "sublabel": "按「刪除呢一堂」",
+      "width": 230
+    },
+    {
+      "id": "api",
+      "lane": "api",
+      "col": 1,
+      "type": "backend",
+      "label": "刪除空堂 API",
+      "sublabel": "delete-empty-session",
+      "width": 230
+    },
+    {
+      "id": "chk",
+      "lane": "api",
+      "col": 2,
+      "type": "backend",
+      "label": "引用檢查",
+      "sublabel": "點名／評語／補堂等",
+      "width": 230
+    },
+    {
+      "id": "blocked",
+      "lane": "staff",
+      "col": 2,
+      "type": "security",
+      "label": "阻止刪除",
+      "sublabel": "有歷史關聯紀錄",
+      "width": 230
+    },
+    {
+      "id": "sess",
+      "lane": "db",
+      "col": 3,
+      "type": "database",
+      "label": "刪當日堂格",
+      "sublabel": "lesson_sessions",
+      "width": 230
+    },
+    {
+      "id": "cls",
+      "lane": "db",
+      "col": 4,
+      "type": "database",
+      "label": "停用整班",
+      "sublabel": "class_groups",
+      "width": 230
+    }
+  ],
+  "edges": [
+    {
+      "id": "e1",
+      "from": "pick",
+      "to": "api",
+      "label": "確認"
+    },
+    {
+      "id": "e2",
+      "from": "api",
+      "to": "chk"
+    },
+    {
+      "id": "e3",
+      "from": "chk",
+      "to": "blocked",
+      "label": "有關聯",
+      "role": "error"
+    },
+    {
+      "id": "e4",
+      "from": "chk",
+      "to": "sess",
+      "label": "班仍有學生"
+    },
+    {
+      "id": "e5",
+      "from": "chk",
+      "to": "cls",
+      "label": "全班已無人"
+    }
+  ],
+  "semanticChecks": {
+    "allowedRoots": [
+      "pick"
+    ],
+    "allowedTerminals": [
+      "sess",
+      "cls",
+      "blocked"
+    ]
+  },
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "刪除條件",
+      "items": [
+        "先確認該日 0 名學生（在讀報名減去 Skip）",
+        "該堂有點名、到家接觸、評語、套票、代課或補點名關聯時禁止刪除",
+        "歷史報名、學費、點名及課堂資料一律保留"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "兩種結果",
+      "items": [
+        "班之後仍有在讀生→只刪該日 lesson_sessions 堂格",
+        "整班已無任何在讀生→安全停用整個 class_group（V374／V391）",
+        "只產生 1 次 session 刪除或 1 次班別停用，另加稽核紀錄"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "介面要點",
+      "items": [
+        "刪除空堂：POST /api/class-groups/:id/delete-empty-session",
+        "停用班別：POST /api/class-groups/:id/deactivate"
+      ]
+    }
+  ]
+}

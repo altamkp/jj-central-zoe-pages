@@ -1,0 +1,243 @@
+{
+  "schema_version": 1,
+  "diagram_type": "dataflow",
+  "meta": {
+    "title": "Jolly Central ・ SchoolTracs 資料匯入",
+    "quality_profile": "showcase",
+    "viewBox": [
+      1068,
+      460
+    ],
+    "views": [
+      {
+        "id": "two-modes",
+        "label": "兩種匯入模式",
+        "focus": [
+          "excel",
+          "admin",
+          "parse",
+          "safe",
+          "full"
+        ],
+        "note": "功能1 只更新基本資料；功能2 連單據點名一併覆蓋。"
+      },
+      {
+        "id": "write-rules",
+        "label": "寫入規則",
+        "focus": [
+          "upsert",
+          "master"
+        ],
+        "note": "以 natural key upsert，重複匯入不會重複建立報名或堂日。"
+      },
+      {
+        "id": "coverage",
+        "label": "全覆蓋範圍",
+        "focus": [
+          "full",
+          "fin",
+          "taskq"
+        ],
+        "note": "只有功能2 會覆蓋收費、發票、點名及補堂。"
+      }
+    ],
+    "legend": {
+      "mode": "hidden"
+    }
+  },
+  "stages": [
+    {
+      "label": "ST 來源"
+    },
+    {
+      "label": "解析預覽"
+    },
+    {
+      "label": "匯入模式"
+    },
+    {
+      "label": "批次寫入"
+    },
+    {
+      "label": "JC 落庫"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "excel",
+      "type": "external",
+      "label": "SchoolTracs Excel",
+      "sublabel": "上限 12MB",
+      "stage": 0,
+      "row": 0
+    },
+    {
+      "id": "admin",
+      "type": "frontend",
+      "label": "admin 選匯入模式",
+      "sublabel": "ST 入資料分頁",
+      "stage": 0,
+      "row": 1
+    },
+    {
+      "id": "parse",
+      "type": "backend",
+      "label": "預覽解析",
+      "sublabel": "imports/preview",
+      "stage": 1,
+      "row": 0,
+      "yOffset": 7
+    },
+    {
+      "id": "safe",
+      "type": "backend",
+      "label": "功能1 安全批次",
+      "sublabel": "新增／更新基本資料",
+      "stage": 2,
+      "row": 0
+    },
+    {
+      "id": "full",
+      "type": "backend",
+      "label": "功能2 全覆蓋",
+      "sublabel": "連單據點名覆蓋",
+      "stage": 2,
+      "row": 1
+    },
+    {
+      "id": "upsert",
+      "type": "backend",
+      "label": "natural key upsert",
+      "sublabel": "在讀唯一索引",
+      "stage": 3,
+      "row": 0,
+      "yOffset": 7
+    },
+    {
+      "id": "master",
+      "type": "database",
+      "label": "學生／班別／報名",
+      "sublabel": "＋lesson_sessions",
+      "stage": 3,
+      "row": 1
+    },
+    {
+      "id": "fin",
+      "type": "database",
+      "label": "單據／點名／補堂",
+      "sublabel": "僅全覆蓋寫入",
+      "stage": 4,
+      "row": 1
+    },
+    {
+      "id": "taskq",
+      "type": "backend",
+      "label": "ST 工作台",
+      "sublabel": "待跟進佇列",
+      "stage": 4,
+      "row": 0
+    }
+  ],
+  "flows": [
+    {
+      "id": "f1",
+      "from": "excel",
+      "to": "parse",
+      "label": "上載 Excel",
+      "classification": "檔案",
+      "variant": "emphasis"
+    },
+    {
+      "id": "f2",
+      "from": "admin",
+      "to": "parse",
+      "label": "選模式",
+      "classification": "操作"
+    },
+    {
+      "id": "f3",
+      "from": "parse",
+      "to": "safe",
+      "label": "功能1",
+      "classification": "基本資料"
+    },
+    {
+      "id": "f4",
+      "from": "parse",
+      "to": "full",
+      "label": "功能2",
+      "classification": "全部資料"
+    },
+    {
+      "id": "f5",
+      "from": "safe",
+      "to": "upsert",
+      "label": "逐批 ≤50",
+      "classification": "safe-batch"
+    },
+    {
+      "id": "f6",
+      "from": "full",
+      "to": "upsert",
+      "label": "逐批覆蓋",
+      "classification": "confirm-batch"
+    },
+    {
+      "id": "f7",
+      "from": "upsert",
+      "to": "master",
+      "label": "寫入",
+      "classification": "natural key",
+      "variant": "emphasis",
+      "labelDy": 24,
+      "labelDx": 30
+    },
+    {
+      "id": "f8",
+      "from": "full",
+      "to": "fin",
+      "label": "覆蓋單據點名",
+      "classification": "全覆蓋限定",
+      "variant": "emphasis",
+      "route": "bottom-channel"
+    },
+    {
+      "id": "f9",
+      "from": "master",
+      "to": "taskq",
+      "label": "異動入工作台",
+      "classification": "待跟進",
+      "variant": "dashed"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "安全規則",
+      "items": [
+        "Excel 未出現的學生不會被刪除或自動標記退學",
+        "ST「最後上課日期」只視作學期完結，不是退學日期",
+        "既有學生只可選擇性同步分校，其他資料不動（功能1）"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Upsert 規則",
+      "items": [
+        "預覽：POST /api/imports/preview；批次：safe-batch／confirm-batch",
+        "班別：INSERT OR IGNORE（course_code＋分校＋星期＋時間）",
+        "報名：只對 enrollment_status=在讀 的唯一索引 upsert（V387）",
+        "堂日：以 class_group_id＋session_date＋時間為鍵，重複匯入不重複建立"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "全覆蓋差異",
+      "items": [
+        "功能2 會以 ST 點名覆蓋同學生＋同班＋同日紀錄（含遲到）",
+        "同時覆蓋單堂收費、發票／收據及補堂；學生資料以 ON CONFLICT 填補",
+        "匯入後進入 verify 階段；IT 帳號只可使用 ST 入資料相關端點"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,165 @@
+{
+  "schema_version": 2,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "Jolly Central ・ Skip 堂與學費同步",
+    "quality_profile": "showcase",
+    "legend": {
+      "mode": "hidden"
+    },
+    "viewBox": [
+      1048,
+      566
+    ]
+  },
+  "lanes": [
+    {
+      "id": "staff",
+      "label": "職員與例外處理"
+    },
+    {
+      "id": "api",
+      "label": "Worker API"
+    },
+    {
+      "id": "db",
+      "label": "D1 資料庫"
+    }
+  ],
+  "mainPath": [
+    "pick",
+    "api",
+    "sync",
+    "item"
+  ],
+  "nodes": [
+    {
+      "id": "pick",
+      "lane": "staff",
+      "col": 0,
+      "type": "frontend",
+      "label": "選報名＋Skip 日",
+      "sublabel": "須為有效堂日",
+      "width": 176
+    },
+    {
+      "id": "api",
+      "lane": "api",
+      "col": 1,
+      "type": "backend",
+      "label": "Skip API",
+      "sublabel": "寫入 Skip 日期",
+      "width": 176
+    },
+    {
+      "id": "rows",
+      "lane": "db",
+      "col": 1,
+      "type": "database",
+      "label": "enrollment_skip_dates",
+      "sublabel": "該日禁止點名",
+      "width": 176
+    },
+    {
+      "id": "sync",
+      "lane": "api",
+      "col": 3,
+      "type": "backend",
+      "label": "同步未繳單",
+      "sublabel": "實收÷原堂數重算",
+      "width": 176
+    },
+    {
+      "id": "item",
+      "lane": "db",
+      "col": 4,
+      "type": "database",
+      "label": "invoice_items 重算",
+      "sublabel": "堂日／數量／總額",
+      "width": 176
+    },
+    {
+      "id": "guard",
+      "lane": "staff",
+      "col": 3,
+      "type": "security",
+      "label": "拒絕同步",
+      "sublabel": "已繳／部分繳／回贈",
+      "width": 176
+    }
+  ],
+  "edges": [
+    {
+      "id": "e1",
+      "from": "pick",
+      "to": "api",
+      "label": "確認 Skip"
+    },
+    {
+      "id": "e2",
+      "from": "api",
+      "to": "rows",
+      "label": "記錄"
+    },
+    {
+      "id": "e3",
+      "from": "api",
+      "to": "sync",
+      "label": "觸發學費同步",
+      "variant": "emphasis"
+    },
+    {
+      "id": "e4",
+      "from": "sync",
+      "to": "item",
+      "label": "重算"
+    },
+    {
+      "id": "e5",
+      "from": "sync",
+      "to": "guard",
+      "label": "受保護",
+      "role": "error"
+    }
+  ],
+  "semanticChecks": {
+    "allowedRoots": [
+      "pick"
+    ],
+    "allowedTerminals": [
+      "item",
+      "guard",
+      "rows"
+    ]
+  },
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "配對規則",
+      "items": [
+        "Skip 日先以 enrollment＋session_date 配對學費單",
+        "SchoolTracs 轉班後的歷史單，容許同學生＋同課程＋同日的安全後備配對",
+        "無 session_dates 的舊單只在唯一安全候選下重建堂日（V384）"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "重算規則",
+      "items": [
+        "以發票項目原「實收總額 ÷ 原堂數」作每堂淨額",
+        "保留 85折／9折／AutoPay 95折 等已計優惠，不重新套價",
+        "重按同一 Skip 亦不會重複扣款",
+        "同步更新單項與發票的數量／堂日／總額／餘額及期間"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "取消與介面",
+      "items": [
+        "取消 Skip 只根據該次 audit adjustment 還原被扣堂日",
+        "API：POST /api/enrollments/:id/skip-dates",
+        "取消：DELETE /api/enrollments/:id/skip-dates/:date"
+      ]
+    }
+  ]
+}

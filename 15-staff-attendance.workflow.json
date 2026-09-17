@@ -1,0 +1,163 @@
+{
+  "schema_version": 2,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "Jolly Central ・ 員工考勤流程",
+    "quality_profile": "showcase",
+    "legend": {
+      "mode": "hidden"
+    }
+  },
+  "lanes": [
+    {
+      "id": "staff",
+      "label": "員工與批核"
+    },
+    {
+      "id": "api",
+      "label": "Worker API"
+    },
+    {
+      "id": "db",
+      "label": "D1 資料庫"
+    }
+  ],
+  "mainPath": [
+    "punch",
+    "geo",
+    "rows"
+  ],
+  "nodes": [
+    {
+      "id": "punch",
+      "lane": "staff",
+      "col": 0,
+      "type": "frontend",
+      "label": "GPS 四段打卡",
+      "sublabel": "上班→午出→午返→下班",
+      "width": 176
+    },
+    {
+      "id": "geo",
+      "lane": "api",
+      "col": 1,
+      "type": "backend",
+      "label": "打卡 API",
+      "sublabel": "地圍 150m＋順序",
+      "width": 176
+    },
+    {
+      "id": "rows",
+      "lane": "db",
+      "col": 2,
+      "type": "database",
+      "label": "attendance_punches",
+      "sublabel": "OT≥30分鐘自動申報",
+      "width": 176
+    },
+    {
+      "id": "leave",
+      "lane": "staff",
+      "col": 3,
+      "type": "frontend",
+      "label": "請假申請",
+      "sublabel": "受影響堂排代課",
+      "width": 176
+    },
+    {
+      "id": "lrows",
+      "lane": "db",
+      "col": 4,
+      "type": "database",
+      "label": "staff_leave_requests",
+      "sublabel": "＋staff_leave_classes",
+      "width": 176
+    },
+    {
+      "id": "rev",
+      "lane": "staff",
+      "col": 4,
+      "type": "security",
+      "label": "批核",
+      "sublabel": "更正／OT／請假",
+      "width": 176
+    }
+  ],
+  "edges": [
+    {
+      "id": "e1",
+      "from": "punch",
+      "to": "geo",
+      "label": "打卡"
+    },
+    {
+      "id": "e2",
+      "from": "geo",
+      "to": "rows",
+      "label": "寫入",
+      "variant": "emphasis"
+    },
+    {
+      "id": "e3",
+      "from": "rows",
+      "to": "rev",
+      "label": "打卡更正",
+      "role": "error",
+      "route": "up-channel"
+    },
+    {
+      "id": "e4",
+      "from": "leave",
+      "to": "lrows",
+      "label": "提交"
+    },
+    {
+      "id": "e5",
+      "from": "lrows",
+      "to": "rev",
+      "label": "待批核"
+    },
+    {
+      "id": "e6",
+      "from": "rev",
+      "to": "rows",
+      "label": "批核後更新",
+      "variant": "dashed"
+    }
+  ],
+  "semanticChecks": {
+    "allowedRoots": [
+      "punch",
+      "leave"
+    ]
+  },
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "打卡規則",
+      "items": [
+        "四段順序：上班→午出→午返→下班；順序錯調會被拒",
+        "地圍預設 150 米（branch_attendance_settings 可調），另有 WFH 模式",
+        "OT 達 30 分鐘以上自動寫入 staff_ot_requests"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "提醒與代課",
+      "items": [
+        "每分鐘 cron 經 web-push 提醒：返工前 5 分鐘／放工／Lunch 復工",
+        "請假影響的課堂在 staff_leave_classes 安排代課導師",
+        "批核人：直屬主管（supervisor_user_id）或 HR"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "介面要點",
+      "items": [
+        "打卡：POST /api/attendance/punch",
+        "請假：POST /api/attendance/leaves",
+        "薪津報表：GET /api/reports/teacher-payroll-attendance"
+      ]
+    }
+  ]
+}

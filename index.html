@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jolly Central ・ 系統圖表</title>
+<style>
+  :root {
+    --bg: #f6f8fa; --panel: #ffffff; --text: #1f2430; --muted: #5b6572;
+    --accent: #0f7b6c; --border: #dde3ea; --chip: #eef3f2;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #10141b; --panel: #171d26; --text: #e8ecf1; --muted: #9aa7b4; --accent: #3ecfb2; --border: #2a3340; --chip: #1f2836; }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 0 1.25rem 3rem; background: var(--bg); color: var(--text); font-family: "PingFang TC", "Microsoft JhengHei", "Noto Sans TC", system-ui, sans-serif; line-height: 1.55; }
+  .wrap { max-width: 1100px; margin: 0 auto; }
+  header { padding: 2.2rem 0 1.2rem; }
+  h1 { margin: 0 0 .3rem; font-size: 1.55rem; }
+  h1 .dot { color: var(--accent); }
+  .sub { color: var(--muted); margin: 0 0 .5rem; }
+  .sub a { color: var(--accent); text-decoration: none; }
+  .sub a:hover { text-decoration: underline; }
+  .legend { display: flex; gap: .5rem; flex-wrap: wrap; margin: .6rem 0 0; }
+  .legend span { background: var(--chip); border: 1px solid var(--border); border-radius: 999px; padding: .1rem .7rem; font-size: .78rem; color: var(--muted); }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(310px, 1fr)); gap: .9rem; margin-top: 1.1rem; }
+  a.card { display: block; background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 1rem 1.1rem; text-decoration: none; color: var(--text); transition: transform .12s ease, border-color .12s ease; }
+  a.card:hover { transform: translateY(-2px); border-color: var(--accent); }
+  .num { display: inline-block; min-width: 1.7em; color: var(--accent); font-weight: 700; font-variant-numeric: tabular-nums; }
+  .card h2 { margin: 0; font-size: 1.02rem; font-weight: 650; }
+  .card p { margin: .35rem 0 0; color: var(--muted); font-size: .86rem; }
+  .kind { float: right; font-size: .7rem; letter-spacing: .06em; color: var(--muted); border: 1px solid var(--border); border-radius: 6px; padding: .06rem .45rem; margin-top: .15rem; }
+  footer { margin-top: 2.2rem; color: var(--muted); font-size: .8rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1><span class="dot">●</span> Jolly Central ・ 系統圖表</h1>
+    <p class="sub">15 張互動式架構／流程圖 — 學習中心管理系統（Cloudflare Workers + D1）。開啟任一頁可切換深淺色、平移縮放、搜尋與關係追蹤。建議按下列閱讀順序（先架構，後依賴，再按側邊欄）。</p>
+    <p class="sub"><a href="https://github.com/altamkp/jj-central-zoe">GitHub 原始碼倉庫 ↗</a></p>
+    <div class="legend"><span>architecture 架構 ×1</span><span>workflow 流程 ×12</span><span>dataflow 資料流 ×1</span><span>lifecycle 生命週期 ×1</span></div>
+  </header>
+  <main class="grid">
+    <a class="card" href="1-jj-central-system.architecture.html"><span class="kind">architecture</span><h2><span class="num">1</span>系統架構</h2><p>Cloudflare Worker + D1 單體式架構：SPA、Session 認證、Workers AI、定時提醒與外部整合。</p></a>
+    <a class="card" href="2-enrollment.workflow.html"><span class="kind">workflow</span><h2><span class="num">2</span>學生報名流程</h2><p>選學生與開始日期、班別課程、優惠定價、堂日選擇，建立報名與首月學費單。</p></a>
+    <a class="card" href="3-attendance.workflow.html"><span class="kind">workflow</span><h2><span class="num">3</span>課堂點名流程</h2><p>五狀態點名（出席／遲到／缺席／請假／病假）、完成鎖堂、補點名與更正批核。</p></a>
+    <a class="card" href="4-class-transfer.workflow.html"><span class="kind">workflow</span><h2><span class="num">4</span>轉課堂流程</h2><p>生效日搬移未來堂日與點名、新舊報名銜接；同一入口兼處暫停與退學。</p></a>
+    <a class="card" href="5-empty-session-delete.workflow.html"><span class="kind">workflow</span><h2><span class="num">5</span>空堂刪除流程</h2><p>0 人堂格刪除、引用檢查、整班安全停用，歷史資料保留。</p></a>
+    <a class="card" href="6-teacher-comment-ai.workflow.html"><span class="kind">workflow</span><h2><span class="num">6</span>老師評語與 AI 建議</h2><p>課堂評語紀錄與六種 AI 建議模式；建議不自動保存，採用後仍須自行儲存。</p></a>
+    <a class="card" href="7-billing-payment.workflow.html"><span class="kind">workflow</span><h2><span class="num">7</span>學費出單與收款</h2><p>月結出單、課程優惠與 AutoPay 95 折疊加、四種收款方式、收據 PDF 與退單重出。</p></a>
+    <a class="card" href="8-withdrawal.workflow.html"><span class="kind">workflow</span><h2><span class="num">8</span>標記退學流程</h2><p>退學原因與最後一堂必填、未繳單安全同步、受保護單據提示會計跟進。</p></a>
+    <a class="card" href="9-makeup-lesson.workflow.html"><span class="kind">workflow</span><h2><span class="num">9</span>補堂安排流程</h2><p>請假／缺席安排補堂、目標堂資格規則、學費單堂日對調與取消還原。</p></a>
+    <a class="card" href="10-skip-lesson.workflow.html"><span class="kind">workflow</span><h2><span class="num">10</span>Skip 堂與學費同步</h2><p>Skip 日期寫入、未繳學費單按「實收÷原堂數」重算，取消 Skip 按稽核還原。</p></a>
+    <a class="card" href="11-autopay-batch.workflow.html"><span class="kind">workflow</span><h2><span class="num">11</span>AutoPay 自動轉帳批次</h2><p>加密帳戶檔與限額、候選選單、預覽拆單、確立批次至恒生 HKMRI TXT／XLSX。</p></a>
+    <a class="card" href="12-invoice-status.lifecycle.html"><span class="kind">lifecycle</span><h2><span class="num">12</span>學費單狀態生命週期</h2><p>出單 → 未繳 → 部分繳付／已繳；AutoPay 過數中、刪單作廢與同班同日重出。</p></a>
+    <a class="card" href="13-parent-requests.workflow.html"><span class="kind">workflow</span><h2><span class="num">13</span>家長申請流程</h2><p>免登入 token 連結加電話 PIN，請假／補堂／退學申請與職員審批後自動套用。</p></a>
+    <a class="card" href="14-schooltracs-import.dataflow.html"><span class="kind">dataflow</span><h2><span class="num">14</span>SchoolTracs 資料匯入</h2><p>Excel 兩種匯入模式、natural key upsert、全覆蓋範圍與安全規則。</p></a>
+    <a class="card" href="15-staff-attendance.workflow.html"><span class="kind">workflow</span><h2><span class="num">15</span>員工考勤流程</h2><p>GPS 四段打卡、地圍檢查、OT 申報、請假與代課安排、主管／HR 批核。</p></a>
+  </main>
+  <footer>Jolly Central（jj-central-zoe）· 圖表由 Archify 產生，規格 JSON 與 HTML 同置於 <code>diagrams/</code>。</footer>
+</div>
+</body>
+</html>

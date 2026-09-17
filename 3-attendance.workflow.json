@@ -1,0 +1,199 @@
+{
+  "schema_version": 2,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "Jolly Central ・ 課堂點名流程",
+    "quality_profile": "showcase",
+    "legend": {
+      "mode": "hidden"
+    }
+  },
+  "lanes": [
+    {
+      "id": "staff",
+      "label": "老師／職員"
+    },
+    {
+      "id": "api",
+      "label": "Worker 檢查"
+    },
+    {
+      "id": "db",
+      "label": "D1 紀錄"
+    },
+    {
+      "id": "rev",
+      "label": "補點名／更正批核",
+      "variant": "exception"
+    }
+  ],
+  "mainPath": [
+    "open",
+    "mark",
+    "save",
+    "guard",
+    "rows",
+    "lock"
+  ],
+  "nodes": [
+    {
+      "id": "open",
+      "lane": "staff",
+      "col": 0,
+      "type": "frontend",
+      "label": "開啟課堂",
+      "sublabel": "時間表／每日課堂",
+      "width": 146
+    },
+    {
+      "id": "mark",
+      "lane": "staff",
+      "col": 1,
+      "type": "frontend",
+      "label": "逐生點名",
+      "sublabel": "五狀態＋備註評語",
+      "width": 146
+    },
+    {
+      "id": "save",
+      "lane": "staff",
+      "col": 2,
+      "type": "frontend",
+      "label": "按儲存",
+      "sublabel": "逐生或全班",
+      "width": 146
+    },
+    {
+      "id": "guard",
+      "lane": "api",
+      "col": 3,
+      "type": "backend",
+      "label": "點名 API",
+      "sublabel": "驗日期・Skip・鎖堂",
+      "width": 146
+    },
+    {
+      "id": "rows",
+      "lane": "db",
+      "col": 4,
+      "type": "database",
+      "label": "attendance_records",
+      "sublabel": "遲到視作出席",
+      "width": 146
+    },
+    {
+      "id": "lock",
+      "lane": "db",
+      "col": 5,
+      "type": "database",
+      "label": "完成鎖堂",
+      "sublabel": "全點完自動鎖",
+      "width": 146
+    },
+    {
+      "id": "req",
+      "lane": "rev",
+      "col": 3,
+      "type": "security",
+      "label": "補點名／更正申請",
+      "sublabel": "舊堂未點或已鎖",
+      "width": 146
+    },
+    {
+      "id": "approve",
+      "lane": "rev",
+      "col": 4,
+      "type": "security",
+      "label": "HR／admin 批核",
+      "sublabel": "批核後補寫",
+      "width": 146
+    }
+  ],
+  "edges": [
+    {
+      "id": "e1",
+      "from": "open",
+      "to": "mark"
+    },
+    {
+      "id": "e2",
+      "from": "mark",
+      "to": "save"
+    },
+    {
+      "id": "e3",
+      "from": "save",
+      "to": "guard",
+      "label": "提交點名",
+      "variant": "emphasis"
+    },
+    {
+      "id": "e4",
+      "from": "guard",
+      "to": "rows",
+      "label": "通過檢查",
+      "variant": "emphasis"
+    },
+    {
+      "id": "e5",
+      "from": "rows",
+      "to": "lock",
+      "label": "全數點完"
+    },
+    {
+      "id": "e6",
+      "from": "guard",
+      "to": "req",
+      "label": "已鎖定",
+      "role": "error"
+    },
+    {
+      "id": "e7",
+      "from": "req",
+      "to": "approve"
+    },
+    {
+      "id": "e8",
+      "from": "approve",
+      "to": "rows",
+      "label": "批核後"
+    }
+  ],
+  "semanticChecks": {
+    "allowedRoots": [
+      "open"
+    ],
+    "allowedTerminals": [
+      "lock"
+    ]
+  },
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "點名狀態",
+      "items": [
+        "五種狀態：出席／遲到／缺席／請假／病假，可加備註（V395 修正 D1 CHECK）",
+        "遲到保留為獨立狀態，業務上視作已出席",
+        "點名與評語可分開儲存；同時修改則一次保存兩項（V393）"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "鎖定與批核",
+      "items": [
+        "過去堂日全班點名完成即鎖定（lesson_attendance_completions）",
+        "未點的舊堂須申請補點名，由 HR 批核後補寫",
+        "已鎖堂的更改須申請點名更正，由 admin 批核"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "介面要點",
+      "items": [
+        "儲存點名：PUT /api/students/:id/attendance/:sessionId",
+        "Skip 日期的點名會被拒（409）",
+        "非出席狀態會排入 SchoolTracs 異動；更改請假會連動取消補堂"
+      ]
+    }
+  ]
+}

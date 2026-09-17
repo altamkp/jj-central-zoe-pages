@@ -1,0 +1,179 @@
+{
+  "schema_version": 2,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "Jolly Central ・ 標記退學流程",
+    "quality_profile": "showcase",
+    "legend": {
+      "mode": "hidden"
+    }
+  },
+  "lanes": [
+    {
+      "id": "staff",
+      "label": "職員與會計跟進"
+    },
+    {
+      "id": "api",
+      "label": "Worker API"
+    },
+    {
+      "id": "db",
+      "label": "D1 資料庫"
+    }
+  ],
+  "mainPath": [
+    "form",
+    "api",
+    "trim",
+    "enr",
+    "stu"
+  ],
+  "nodes": [
+    {
+      "id": "form",
+      "lane": "staff",
+      "col": 0,
+      "type": "frontend",
+      "label": "輸入退學原因",
+      "sublabel": "＋最後一堂日期（必填）",
+      "width": 140
+    },
+    {
+      "id": "api",
+      "lane": "api",
+      "col": 1,
+      "type": "backend",
+      "label": "退學 API",
+      "sublabel": "標記退學",
+      "width": 140
+    },
+    {
+      "id": "trim",
+      "lane": "api",
+      "col": 2,
+      "type": "backend",
+      "label": "未繳單安全同步",
+      "sublabel": "最後一堂後取消／重算",
+      "width": 140
+    },
+    {
+      "id": "warn",
+      "lane": "staff",
+      "col": 2,
+      "type": "security",
+      "label": "會計跟進",
+      "sublabel": "受收款／回贈保護",
+      "width": 140
+    },
+    {
+      "id": "enr",
+      "lane": "db",
+      "col": 3,
+      "type": "database",
+      "label": "enrollments 結束",
+      "sublabel": "end_date＝最後一堂",
+      "width": 140
+    },
+    {
+      "id": "changes",
+      "lane": "db",
+      "col": 4,
+      "type": "database",
+      "label": "未來生效排程",
+      "sublabel": "enrollment_changes",
+      "width": 140
+    },
+    {
+      "id": "stu",
+      "lane": "db",
+      "col": 5,
+      "type": "database",
+      "label": "學生狀態",
+      "sublabel": "日期已到→退學",
+      "width": 140
+    }
+  ],
+  "edges": [
+    {
+      "id": "e1",
+      "from": "form",
+      "to": "api",
+      "label": "確認退學"
+    },
+    {
+      "id": "e2",
+      "from": "api",
+      "to": "trim"
+    },
+    {
+      "id": "e3",
+      "from": "trim",
+      "to": "warn",
+      "label": "受保護",
+      "role": "error"
+    },
+    {
+      "id": "e4",
+      "from": "trim",
+      "to": "enr",
+      "label": "即時生效"
+    },
+    {
+      "id": "e5",
+      "from": "api",
+      "to": "changes",
+      "label": "生效日在未來"
+    },
+    {
+      "id": "e6",
+      "from": "changes",
+      "to": "stu",
+      "label": "到期套用",
+      "variant": "dashed"
+    },
+    {
+      "id": "e7",
+      "from": "enr",
+      "to": "stu",
+      "label": "更新狀態"
+    }
+  ],
+  "semanticChecks": {
+    "allowedRoots": [
+      "form"
+    ],
+    "allowedTerminals": [
+      "stu",
+      "warn"
+    ]
+  },
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "退學認定",
+      "items": [
+        "「已退學」顯示只認 JC 明確退學狀態或退學取消原因（V389）",
+        "SchoolTracs 的課程「最後上課日期」只是學期完結，不是退學",
+        "真正退學來源：家長申請獲批、同事標記退學、匯入舊課程查詢規則"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "顯示與排程",
+      "items": [
+        "時間表在學生姓名後顯示「（最後一堂）」",
+        "個人資料顯示「已退學 ・ 最後一堂 M/D」",
+        "生效日在未來時排入 enrollment_changes，到期自動套用"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "介面要點",
+      "items": [
+        "退學：POST /api/students/:id/withdraw",
+        "最後一堂後未繳單會取消／重算；受保護單據只提示會計跟進"
+      ]
+    }
+  ]
+}

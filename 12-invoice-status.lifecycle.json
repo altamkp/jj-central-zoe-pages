@@ -1,0 +1,226 @@
+{
+  "schema_version": 1,
+  "diagram_type": "lifecycle",
+  "meta": {
+    "title": "Jolly Central ・ 學費單狀態生命週期",
+    "quality_profile": "showcase",
+    "viewBox": [
+      1080,
+      566
+    ],
+    "views": [
+      {
+        "id": "payment-rail",
+        "label": "收款主線",
+        "focus": [
+          "created",
+          "unpaid",
+          "partial",
+          "paid"
+        ],
+        "note": "由出單到全數繳清的主要狀態推進。"
+      },
+      {
+        "id": "autopay-branch",
+        "label": "AutoPay 分支",
+        "focus": [
+          "unpaid",
+          "apwait",
+          "paid"
+        ],
+        "note": "出批次後待銀行確認，作廢批次會回復未繳。"
+      },
+      {
+        "id": "void-path",
+        "label": "作廢與重出",
+        "focus": [
+          "unpaid",
+          "void"
+        ],
+        "note": "只有未繳且無收款保護的單可刪除，並可同班同日重出。"
+      }
+    ],
+    "legend": {
+      "mode": "hidden"
+    }
+  },
+  "lanes": [
+    {
+      "id": "main",
+      "label": "學費單主狀態"
+    },
+    {
+      "id": "bank",
+      "label": "AutoPay 銀行流程"
+    },
+    {
+      "id": "end",
+      "label": "完結狀態"
+    }
+  ],
+  "states": [
+    {
+      "id": "created",
+      "type": "start",
+      "label": "出單",
+      "sublabel": "報名／月結產生",
+      "lane": "main",
+      "col": 0,
+      "step": "01"
+    },
+    {
+      "id": "unpaid",
+      "type": "active",
+      "label": "未繳",
+      "sublabel": "等待收款",
+      "lane": "main",
+      "col": 1,
+      "step": "02"
+    },
+    {
+      "id": "partial",
+      "type": "waiting",
+      "label": "部分繳付",
+      "sublabel": "尚有餘額",
+      "lane": "main",
+      "col": 2,
+      "step": "03"
+    },
+    {
+      "id": "paid",
+      "type": "success",
+      "label": "已繳",
+      "sublabel": "餘額歸零",
+      "lane": "main",
+      "col": 3,
+      "step": "04"
+    },
+    {
+      "id": "apwait",
+      "type": "waiting",
+      "label": "AutoPay 過數中",
+      "sublabel": "批次待銀行確認",
+      "lane": "bank",
+      "col": 2,
+      "tag": "待確認"
+    },
+    {
+      "id": "void",
+      "type": "failure",
+      "label": "作廢",
+      "sublabel": "軟刪除・留紀錄",
+      "lane": "end",
+      "col": 0,
+      "tag": "可重出"
+    }
+  ],
+  "transitions": [
+    {
+      "id": "t1",
+      "from": "created",
+      "to": "unpaid",
+      "label": "建立"
+    },
+    {
+      "id": "t2",
+      "from": "unpaid",
+      "to": "partial",
+      "label": "部分收款",
+      "labelDy": -62,
+      "labelDx": 30
+    },
+    {
+      "id": "t3",
+      "from": "partial",
+      "to": "paid",
+      "label": "找清",
+      "labelDy": 30
+    },
+    {
+      "id": "t4",
+      "from": "unpaid",
+      "to": "paid",
+      "label": "全數繳付",
+      "variant": "emphasis",
+      "route": "top-channel",
+      "labelSegment": 0,
+      "labelDx": -14
+    },
+    {
+      "id": "t5",
+      "from": "unpaid",
+      "to": "apwait",
+      "label": "出批次",
+      "labelSegment": 1,
+      "labelDx": -40,
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "id": "t6",
+      "from": "apwait",
+      "to": "paid",
+      "label": "銀行確認",
+      "variant": "emphasis"
+    },
+    {
+      "id": "t7",
+      "from": "apwait",
+      "to": "unpaid",
+      "label": "作廢回復",
+      "variant": "dashed",
+      "labelSegment": 1,
+      "labelDx": 40,
+      "fromSide": "top",
+      "toSide": "bottom"
+    },
+    {
+      "id": "t8",
+      "from": "unpaid",
+      "to": "void",
+      "label": "刪單",
+      "variant": "security",
+      "labelDx": -16,
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "id": "t9",
+      "from": "void",
+      "to": "unpaid",
+      "label": "重出",
+      "variant": "dashed",
+      "labelDx": 16,
+      "fromSide": "top",
+      "toSide": "bottom"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "狀態推進",
+      "items": [
+        "出單後狀態為未繳；收款按發票總額推進至部分繳付或已繳",
+        "月結單會併入同月未繳單；Skip 堂會同步扣減未繳單金額",
+        "AutoPay 出批次後先記網上過數，銀行確認才算已繳"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "保護規則",
+      "items": [
+        "只有未繳且無收款、無回贈、無 AutoPay 保護的單可刪除",
+        "受保護單據在退學或 Skip 時只提示會計跟進",
+        "作廢是軟刪除：保留紀錄、退回回贈、重算狀態"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "重出規則",
+      "items": [
+        "刪單後重選同班同日，會在原報名上重建學費單（V378／V380）",
+        "若部分堂日已有有效發票，重出仍會被重複保護擋下"
+      ]
+    }
+  ]
+}

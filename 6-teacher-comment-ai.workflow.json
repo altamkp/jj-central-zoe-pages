@@ -1,0 +1,173 @@
+{
+  "schema_version": 2,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "Jolly Central ・ 老師評語與 AI 建議",
+    "quality_profile": "showcase",
+    "legend": {
+      "mode": "hidden"
+    }
+  },
+  "lanes": [
+    {
+      "id": "teacher",
+      "label": "導師"
+    },
+    {
+      "id": "db",
+      "label": "Worker 與 D1"
+    },
+    {
+      "id": "ai",
+      "label": "Workers AI"
+    }
+  ],
+  "mainPath": [
+    "draft",
+    "save",
+    "entries"
+  ],
+  "nodes": [
+    {
+      "id": "draft",
+      "lane": "teacher",
+      "col": 0,
+      "type": "frontend",
+      "label": "撰寫課堂評語",
+      "sublabel": "可只存評語不點名",
+      "width": 140
+    },
+    {
+      "id": "save",
+      "lane": "db",
+      "col": 1,
+      "type": "backend",
+      "label": "評語 API",
+      "sublabel": "存入評語紀錄",
+      "width": 140
+    },
+    {
+      "id": "entries",
+      "lane": "db",
+      "col": 2,
+      "type": "database",
+      "label": "評語紀錄",
+      "sublabel": "student_journal_entries",
+      "width": 140
+    },
+    {
+      "id": "aireq",
+      "lane": "db",
+      "col": 3,
+      "type": "backend",
+      "label": "AI 建議 API",
+      "sublabel": "六種建議模式",
+      "width": 140
+    },
+    {
+      "id": "courses",
+      "lane": "db",
+      "col": 4,
+      "type": "database",
+      "label": "讀有效課程",
+      "sublabel": "限本分校＋適齡年級",
+      "width": 140
+    },
+    {
+      "id": "model",
+      "lane": "ai",
+      "col": 4,
+      "type": "cloud",
+      "label": "llama-3.1-8b",
+      "sublabel": "Workers AI 推理",
+      "width": 140
+    },
+    {
+      "id": "adopt",
+      "lane": "teacher",
+      "col": 5,
+      "type": "frontend",
+      "label": "採用／清除",
+      "sublabel": "採用後仍須自行儲存",
+      "width": 140
+    }
+  ],
+  "edges": [
+    {
+      "id": "e1",
+      "from": "draft",
+      "to": "save",
+      "label": "直接儲存",
+      "variant": "emphasis"
+    },
+    {
+      "id": "e2",
+      "from": "save",
+      "to": "entries",
+      "label": "寫入紀錄"
+    },
+    {
+      "id": "e3",
+      "from": "draft",
+      "to": "aireq",
+      "label": "或先請 AI 協助",
+      "variant": "dashed"
+    },
+    {
+      "id": "e4",
+      "from": "aireq",
+      "to": "courses",
+      "label": "取備選課程"
+    },
+    {
+      "id": "e5",
+      "from": "courses",
+      "to": "model",
+      "label": "組提示詞"
+    },
+    {
+      "id": "e6",
+      "from": "model",
+      "to": "adopt",
+      "label": "建議文字",
+      "variant": "emphasis"
+    }
+  ],
+  "semanticChecks": {
+    "allowedRoots": [
+      "draft"
+    ],
+    "allowedTerminals": [
+      "entries",
+      "adopt"
+    ]
+  },
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "評語紀錄",
+      "items": [
+        "評語存入 student_journal_entries（內部課堂紀錄／學生評語）",
+        "導師可查自己的紀錄；pending 評語可由主任審閱並轉發",
+        "點名與評語可分開儲存，亦可同按一次保存兩項（V393）"
+      ]
+    },
+    {
+      "dot": "violet",
+      "title": "AI 協助規則",
+      "items": [
+        "六種模式：潤飾／鼓勵／改善方法／家居練習／課程建議／完整建議",
+        "課程建議只限該生分校與年級的有效現行課程",
+        "AI 只回傳文字建議，採用後仍須自己按儲存；過程零 D1 寫入"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "介面要點",
+      "items": [
+        "儲存評語：POST /api/student-journal",
+        "AI 建議：POST /api/teacher-comment-ai（草稿上限 3000 字）"
+      ]
+    }
+  ]
+}

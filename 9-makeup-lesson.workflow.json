@@ -1,0 +1,175 @@
+{
+  "schema_version": 2,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "Jolly Central ・ 補堂安排流程",
+    "quality_profile": "showcase",
+    "legend": {
+      "mode": "hidden"
+    }
+  },
+  "lanes": [
+    {
+      "id": "staff",
+      "label": "職員（admin／經理）"
+    },
+    {
+      "id": "api",
+      "label": "Worker 與學費單據"
+    },
+    {
+      "id": "db",
+      "label": "D1 點名紀錄"
+    }
+  ],
+  "mainPath": [
+    "src",
+    "opt",
+    "book",
+    "api",
+    "arr",
+    "att"
+  ],
+  "nodes": [
+    {
+      "id": "src",
+      "lane": "staff",
+      "col": 0,
+      "type": "frontend",
+      "label": "原堂請假／缺席",
+      "sublabel": "請假／病假／缺席",
+      "width": 140
+    },
+    {
+      "id": "opt",
+      "lane": "api",
+      "col": 1,
+      "type": "backend",
+      "label": "補堂選項 API",
+      "sublabel": "同分校＋年級相符",
+      "width": 140
+    },
+    {
+      "id": "book",
+      "lane": "staff",
+      "col": 2,
+      "type": "frontend",
+      "label": "選目標堂",
+      "sublabel": "或手動補堂",
+      "width": 140
+    },
+    {
+      "id": "api",
+      "lane": "api",
+      "col": 3,
+      "type": "backend",
+      "label": "補堂 API",
+      "sublabel": "建立補堂安排",
+      "width": 140
+    },
+    {
+      "id": "arr",
+      "lane": "db",
+      "col": 4,
+      "type": "database",
+      "label": "makeup_arrangements",
+      "sublabel": "原紀錄↔目標堂",
+      "width": 140
+    },
+    {
+      "id": "att",
+      "lane": "db",
+      "col": 5,
+      "type": "database",
+      "label": "補堂點名紀錄",
+      "sublabel": "record_type=補堂",
+      "width": 140
+    },
+    {
+      "id": "inv",
+      "lane": "api",
+      "col": 4,
+      "type": "database",
+      "label": "學費單對調",
+      "sublabel": "invoice_items 堂日",
+      "width": 140
+    }
+  ],
+  "edges": [
+    {
+      "id": "e1",
+      "from": "src",
+      "to": "opt"
+    },
+    {
+      "id": "e2",
+      "from": "opt",
+      "to": "book",
+      "label": "可補堂日"
+    },
+    {
+      "id": "e3",
+      "from": "book",
+      "to": "api",
+      "label": "確認"
+    },
+    {
+      "id": "e4",
+      "from": "api",
+      "to": "arr",
+      "label": "寫入安排",
+      "variant": "emphasis"
+    },
+    {
+      "id": "e5",
+      "from": "arr",
+      "to": "att",
+      "label": "補堂出席"
+    },
+    {
+      "id": "e6",
+      "from": "api",
+      "to": "inv",
+      "label": "單據換堂日",
+      "variant": "emphasis"
+    }
+  ],
+  "semanticChecks": {
+    "allowedRoots": [
+      "src"
+    ],
+    "allowedTerminals": [
+      "att",
+      "inv"
+    ]
+  },
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "資格規則",
+      "items": [
+        "原點名紀錄須為 請假／病假／缺席 才可安排補堂",
+        "目標堂限同分校、年級相符；跨週須課程允許（makeup_cross_week）",
+        "不可選學生自己已報名的班別"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "單據連動",
+      "items": [
+        "補堂會對調 invoice_items 內的 session_dates，學費不變",
+        "取消補堂會回復原紀錄與單據堂日",
+        "手動補堂（自訂日期／時間／房間／導師）可獨立點名"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "介面要點",
+      "items": [
+        "安排補堂：POST /api/students/:id/makeup",
+        "選項：GET /api/students/:id/makeup-options/:recordId",
+        "取消：DELETE /api/students/:id/makeup/:makeupId"
+      ]
+    }
+  ]
+}

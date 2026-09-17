@@ -1,0 +1,375 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Jolly Central 系統架構",
+    "quality_profile": "showcase",
+    "viewBox": [
+      1180,
+      648
+    ],
+    "views": [
+      {
+        "id": "request-path",
+        "label": "主請求路徑",
+        "focus": [
+          "staff",
+          "spa",
+          "auth",
+          "worker",
+          "d1"
+        ],
+        "note": "由職員瀏覽器經認證到 Worker 與 D1 的主要讀寫路徑。"
+      },
+      {
+        "id": "parent-side",
+        "label": "家長服務",
+        "focus": [
+          "parents",
+          "ppage",
+          "worker"
+        ],
+        "note": "家長以免登入 token 連結加電話 PIN 使用服務。"
+      },
+      {
+        "id": "integrations",
+        "label": "外部整合",
+        "focus": [
+          "spa",
+          "worker",
+          "bank",
+          "st"
+        ],
+        "note": "AutoPay 銀行檔輸出與 SchoolTracs Excel 匯入。"
+      }
+    ]
+  },
+  "components": [
+    {
+      "id": "staff",
+      "type": "external",
+      "label": "職員",
+      "sublabel": "admin／經理／導師",
+      "pos": [
+        40,
+        290
+      ],
+      "size": [
+        130,
+        60
+      ]
+    },
+    {
+      "id": "spa",
+      "type": "frontend",
+      "label": "網頁 SPA（PWA）",
+      "sublabel": "public/index.html",
+      "tag": "17 個功能分頁",
+      "pos": [
+        240,
+        276
+      ],
+      "size": [
+        160,
+        88
+      ]
+    },
+    {
+      "id": "auth",
+      "type": "security",
+      "label": "Session 認證",
+      "sublabel": "jj_session・角色權限",
+      "pos": [
+        480,
+        290
+      ],
+      "size": [
+        150,
+        60
+      ]
+    },
+    {
+      "id": "worker",
+      "type": "backend",
+      "label": "Cloudflare Worker",
+      "sublabel": "jj-system・src/index.js",
+      "tag": "Hono API",
+      "pos": [
+        700,
+        264
+      ],
+      "size": [
+        170,
+        112
+      ]
+    },
+    {
+      "id": "d1",
+      "type": "database",
+      "label": "D1 資料庫",
+      "sublabel": "jj-system-db",
+      "tag": "80+ 張表",
+      "pos": [
+        960,
+        276
+      ],
+      "size": [
+        160,
+        88
+      ]
+    },
+    {
+      "id": "push",
+      "type": "messagebus",
+      "label": "定時提醒",
+      "sublabel": "cron・web-push VAPID",
+      "pos": [
+        430,
+        120
+      ],
+      "size": [
+        150,
+        60
+      ]
+    },
+    {
+      "id": "ai",
+      "type": "cloud",
+      "label": "Workers AI",
+      "sublabel": "llama-3.1-8b-instruct-fast",
+      "pos": [
+        960,
+        120
+      ],
+      "size": [
+        160,
+        60
+      ]
+    },
+    {
+      "id": "parents",
+      "type": "external",
+      "label": "家長",
+      "sublabel": "手機・電話 PIN",
+      "pos": [
+        40,
+        470
+      ],
+      "size": [
+        130,
+        60
+      ]
+    },
+    {
+      "id": "ppage",
+      "type": "frontend",
+      "label": "家長 token 頁",
+      "sublabel": "Worker 直出 HTML",
+      "pos": [
+        240,
+        460
+      ],
+      "size": [
+        160,
+        72
+      ]
+    },
+    {
+      "id": "bank",
+      "type": "external",
+      "label": "銀行自動轉帳",
+      "sublabel": "恒生 HKMRI TXT・XLSX",
+      "pos": [
+        700,
+        470
+      ],
+      "size": [
+        160,
+        60
+      ]
+    },
+    {
+      "id": "st",
+      "type": "external",
+      "label": "SchoolTracs Excel",
+      "sublabel": "舊系統資料來源",
+      "pos": [
+        960,
+        470
+      ],
+      "size": [
+        160,
+        60
+      ]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "職員瀏覽器",
+      "wraps": [
+        "spa"
+      ]
+    },
+    {
+      "kind": "region",
+      "label": "家長手機",
+      "wraps": [
+        "parents",
+        "ppage"
+      ]
+    },
+    {
+      "kind": "region",
+      "label": "Cloudflare 平台",
+      "wraps": [
+        "push",
+        "auth",
+        "worker",
+        "ai",
+        "d1"
+      ]
+    },
+    {
+      "kind": "security-group",
+      "label": "認證・稽核 audit_logs",
+      "wraps": [
+        "auth"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "c1",
+      "from": "staff",
+      "to": "spa",
+      "label": "瀏覽器操作",
+      "variant": "emphasis"
+    },
+    {
+      "id": "c2",
+      "from": "spa",
+      "to": "auth",
+      "label": "登入"
+    },
+    {
+      "id": "c3",
+      "from": "auth",
+      "to": "worker",
+      "label": "權限＋稽核",
+      "variant": "security"
+    },
+    {
+      "id": "c4",
+      "from": "worker",
+      "to": "d1",
+      "label": "SQL 讀寫",
+      "variant": "emphasis"
+    },
+    {
+      "id": "c5",
+      "from": "worker",
+      "to": "ai",
+      "label": "評語 AI・JB 推理",
+      "fromSide": "top",
+      "toSide": "left",
+      "via": [
+        [
+          785,
+          150
+        ]
+      ]
+    },
+    {
+      "id": "c6",
+      "from": "push",
+      "to": "staff",
+      "label": "考勤打卡提醒",
+      "variant": "dashed",
+      "fromSide": "left",
+      "toSide": "top",
+      "via": [
+        [
+          105,
+          150
+        ],
+        [
+          105,
+          290
+        ]
+      ]
+    },
+    {
+      "id": "c7",
+      "from": "parents",
+      "to": "ppage",
+      "label": "開連結"
+    },
+    {
+      "id": "c8",
+      "from": "ppage",
+      "to": "auth",
+      "label": "token 驗證",
+      "variant": "security",
+      "fromSide": "right",
+      "toSide": "bottom",
+      "via": [
+        [
+          440,
+          496
+        ],
+        [
+          440,
+          395
+        ],
+        [
+          555,
+          395
+        ]
+      ]
+    },
+    {
+      "id": "c10",
+      "from": "worker",
+      "to": "bank",
+      "label": "出批次檔",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "id": "c11",
+      "from": "st",
+      "to": "worker",
+      "label": "Excel 上傳解析"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "單體式 Worker",
+      "items": [
+        "一個 Worker 檔案 src/index.js 內置 Hono API 與全部業務邏輯",
+        "瀏覽器 SPA（public/index.html）以 Service Worker 快取應用外殼",
+        "Worker 內建每分鐘 cron，經 web-push（VAPID）發送考勤打卡提醒"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "安全與稽核",
+      "items": [
+        "登入採 PBKDF2 session cookie jj_session（7 日有效）",
+        "角色 admin／manager／teacher，另設會計、HR 等細權限；經理限指定分校",
+        "所有非 GET 的成功 API 呼叫自動寫入 audit_logs；家長 token 頁須電話 PIN"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "外部整合",
+      "items": [
+        "Workers AI 僅用於老師評語建議與 Jolly Buddy 問答",
+        "WhatsApp 只在前端組織 deep link（api.whatsapp.com/send），無伺服器端呼叫",
+        "PDF 由前端以 pdf-data 組版下載；AutoPay 出恒生 HKMRI TXT／XLSX"
+      ]
+    }
+  ]
+}
